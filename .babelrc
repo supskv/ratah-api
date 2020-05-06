@@ -7,6 +7,7 @@
         "root": ["./src"],
         "alias": {
           "@app": "./src/app",
+          "@config": "./src/config",
           "@router": "./src/router"
         }
       }
