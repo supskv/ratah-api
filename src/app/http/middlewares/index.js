@@ -1,3 +1,3 @@
-import Multer from "./multer"
+import Multer from "./Multer"
 
 export { Multer }

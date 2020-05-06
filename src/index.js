@@ -1,7 +1,8 @@
 import "dotenv/config"
 import cors from "cors"
-import express from "express"
 import router from "@router"
+import express from "express"
+import { App as AppConfig } from "@config"
 
 const app = express()
 
@@ -13,7 +14,6 @@ app.use(express.urlencoded({ extended: true }))
 app.use("/", router)
 
 // Start Server
-const port = process.env.PORT || 8000
-let app_url = process.env.APP_URL || "http://localhost"
-if (port !== "80") app_url += ":" + port
-app.listen(port, () => console.log("Express server listening on: " + app_url))
+app.listen(AppConfig.port, () =>
+  console.log("Express server listening on: " + AppConfig.appUrl)
+)
