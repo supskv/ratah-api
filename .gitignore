@@ -105,3 +105,6 @@ dist
 
 # Storage
 storage/
+
+# google credentials
+ratah-api-22c56c476936.json

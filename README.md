@@ -21,6 +21,7 @@ touch .env
 # variables example
 PORT=80
 APP_URL=http://localhost
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials/filename.json
 
 # after update .env please re-run server.
 ```
