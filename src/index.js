@@ -16,4 +16,4 @@ app.use("/", router)
 const port = process.env.PORT || 8000
 let app_url = process.env.APP_URL || "http://localhost"
 if (port !== "80") app_url += ":" + port
-app.listen(port, () => console.log("Server listening on: " + app_url))
+app.listen(port, () => console.log("Express server listening on: " + app_url))
