@@ -7,7 +7,7 @@ export const imageTextDetection = async (originalImage) => {
   return result
 }
 
-export const parseDataTextDetection = (obj) => {
+export const parseData = (obj) => {
   // Validate obj
   const { textAnnotations, fullTextAnnotation } = obj
   if (!Array.isArray(textAnnotations) || !textAnnotations.length) return {}
@@ -19,12 +19,7 @@ export const parseDataTextDetection = (obj) => {
   const target = "จำนวน"
 
   // Check keyword
-  if (
-    !totalDescription.includes(target) ||
-    !totalDescription.includes("กุลจิราณัฐ")
-  ) {
-    return {}
-  }
+  if (!checkNumberNName(totalDescription, target)) return {}
 
   // Get annotation that description is "จำนวน"
   const [targetAnno] = annotations.filter((anno) => anno.description === target)
@@ -37,4 +32,34 @@ export const parseDataTextDetection = (obj) => {
     width: objPage.width,
     height: objPage.height,
   }
+}
+
+export const parseDataCrop = (obj) => {
+  // Validate obj
+  const { textAnnotations } = obj
+  if (!Array.isArray(textAnnotations) || !textAnnotations.length) return {}
+
+  const [
+    { description: totalDescription = "" },
+    ...annotations
+  ] = textAnnotations
+  const target = "จำนวน"
+
+  // Check keyword
+  if (!checkNumber(totalDescription, target)) return {}
+
+  // Get annotation that description is "จำนวน"
+  const [voteAnno] = annotations.filter((anno) =>
+    /^\d+$/.test(anno.description)
+  )
+  if (voteAnno === undefined) return {}
+  return { voteAnno: voteAnno }
+}
+
+const checkNumber = (description, target) => {
+  return description.includes(target)
+}
+
+const checkNumberNName = (description, target) => {
+  return checkNumber(description, target) && description.includes("กุลจิราณัฐ")
 }

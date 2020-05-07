@@ -6,11 +6,8 @@ export const imageTextDetection = async () => {
     "tmp/uploads/capture-1588766049022-762403758.jpg"
   )
   const imageTextDetectionObj = await GCS.imageTextDetection(imagePath)
-
   // Get data from VISION response
-  const { numberAnno, width } = GCS.parseDataTextDetection(
-    imageTextDetectionObj
-  )
+  const { numberAnno, width } = GCS.parseData(imageTextDetectionObj)
   if (numberAnno === undefined) return
 
   // Prepare cropping image
@@ -23,7 +20,7 @@ export const imageTextDetection = async () => {
   const cropImageHeight = 150 + blast.y - bfirst.y
   const top = bfirst.y - 100
   const outputImage = ImageHelper.getOutputImagePath(imagePath)
-  await ImageHelper.cropImage(
+  const cropStatus = await ImageHelper.cropImage(
     {
       width: width,
       height: cropImageHeight,
@@ -33,4 +30,11 @@ export const imageTextDetection = async () => {
     imagePath,
     outputImage
   )
+  if (!cropStatus) return
+
+  const cropTextDetectionObj = await GCS.imageTextDetection(outputImage)
+  // Get data from VISION response
+  const { voteAnno } = GCS.parseDataCrop(cropTextDetectionObj)
+
+  console.log(voteAnno.description)
 }
