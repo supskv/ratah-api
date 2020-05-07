@@ -1,16 +1,16 @@
-import * as GCS from "@app/services/GoogleCloudService"
+import { GCS } from "@app/services"
+import { VoteRepo } from "@app/repositories"
 
 export const imageStore = async (req, res) => {
-  console.log(req.body) // form fields
-  console.log(req.file) // form file
+  // console.log(req.body) // form fields
+  // console.log(req.file) // form file
 
-  let originalImage = "originalImage.jpg"
-  let outputImage = "croppedImage.jpg"
-  await ImageHelper.cropImage(
-    { width: 960, height: 250, left: 0, top: 900 },
-    originalImage,
-    outputImage
-  )
+  VoteRepo.imageTextDetection()
 
+  res.send({
+    data: await GCS.imageTextDetection(
+      storage_path("tmp/uploads/capture-1588766049022-762403758.jpg")
+    ),
+  })
   res.status(204).end()
 }

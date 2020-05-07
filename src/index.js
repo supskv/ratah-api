@@ -1,5 +1,6 @@
 import "dotenv/config"
 import cors from "cors"
+import path from "path"
 import router from "@router"
 import express from "express"
 import { App as AppConfig } from "@config"
@@ -17,3 +18,6 @@ app.use("/", router)
 app.listen(AppConfig.port, () =>
   console.log("Express server listening on: " + AppConfig.appUrl)
 )
+
+// Set global variables
+global.storage_path = (str) => path.join(AppConfig.storageDir, str)
