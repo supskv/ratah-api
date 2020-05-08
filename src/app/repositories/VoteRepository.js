@@ -1,5 +1,6 @@
+import fs from "fs"
 import { GCS } from "@app/services"
-import { ImageHelper } from "@app/helpers"
+import { FileHelper, ImageHelper } from "@app/helpers"
 
 export const imageTextDetection = async () => {
   const imagePath = storage_path(
@@ -33,8 +34,10 @@ export const imageTextDetection = async () => {
   if (!cropStatus) return
 
   const cropTextDetectionObj = await GCS.imageTextDetection(outputImage)
+  FileHelper.remove(outputImage)
   // Get data from VISION response
   const { voteAnno } = GCS.parseDataCrop(cropTextDetectionObj)
+  if (voteAnno === undefined) return
 
-  console.log(voteAnno.description)
+  return { voteAnno: voteAnno }
 }

@@ -1,3 +1,4 @@
+import * as FileHelper from "./FileHelper"
 import * as ImageHelper from "./ImageHelper"
 
-export { ImageHelper }
+export { FileHelper, ImageHelper }
