@@ -10,6 +10,7 @@ export const imageTextDetection = async () => {
   const { outputPath } = await createCroppedImage(imagePath, resultOI)
 
   const { anno } = await visionImage(outputPath, "crop")
+  FileHelper.remove(outputPath)
 
   return { anno }
 }
