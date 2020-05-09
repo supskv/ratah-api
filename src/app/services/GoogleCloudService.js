@@ -1,65 +1,78 @@
 import vision from "@google-cloud/vision"
 
 const client = new vision.ImageAnnotatorClient()
+const conditions = {
+  original: { target: "จำนวน", keywords: ["จำนวน", "กุลจิราณัฐ"] },
+  cropped: { target: /^\d+$/, keywords: ["จำนวน"] },
+}
 
+/**
+ * Send to Google Cloud VISION API
+ * @param {String} originalImage path to image
+ */
 export const imageTextDetection = async (originalImage) => {
   const [result] = await client.textDetection(originalImage)
   return result
 }
 
-export const parseData = (obj) => {
+/**
+ * Get result from GCS response json.
+ * If cannot it'll return empty object.
+ * @param {Object} result from VISION API
+ * @param {String} type
+ */
+export const decodeTextDetection = (result, type = "normal") => {
   // Validate obj
-  const { textAnnotations, fullTextAnnotation } = obj
-  if (!Array.isArray(textAnnotations) || !textAnnotations.length) return {}
+  const { textAnnotations: text, fullTextAnnotation: full } = result
+  if (!Array.isArray(text) || !text.length) return {}
 
-  const [
-    { description: totalDescription = "" },
-    ...annotations
-  ] = textAnnotations
-  const target = "จำนวน"
+  // Seperate all annotations
+  const [{ description: total = "" }, ...annos] = text
 
-  // Check keyword
-  if (!checkNumberNName(totalDescription, target)) return {}
-
-  // Get annotation that description is "จำนวน"
-  const [targetAnno] = annotations.filter((anno) => anno.description === target)
-  if (targetAnno === undefined) return {}
-
-  // There are width and height in page object
-  const [objPage] = fullTextAnnotation.pages
-  return {
-    numberAnno: targetAnno,
-    width: objPage.width,
-    height: objPage.height,
+  switch (type) {
+    case "crop":
+      return getResultTypeCrop(total, annos)
+    default:
+      return getResultTypeNormal(total, full, annos)
   }
 }
 
-export const parseDataCrop = (obj) => {
-  // Validate obj
-  const { textAnnotations } = obj
-  if (!Array.isArray(textAnnotations) || !textAnnotations.length) return {}
+/**
+ * Check and get result from Vision API response json that type is normal
+ * @param {String} total
+ * @param {Object} full
+ * @param {Array} annos
+ */
+const getResultTypeNormal = (total, full, annos) => {
+  // Condition
+  if (!checkKeywords(conditions.original.keywords, total)) return {}
 
-  const [
-    { description: totalDescription = "" },
-    ...annotations
-  ] = textAnnotations
-  const target = "จำนวน"
+  // Get page object
+  const [page] = full.pages
+  const [anno] = annos.filter((a) => a.description === conditions.original.target)
 
-  // Check keyword
-  if (!checkNumber(totalDescription, target)) return {}
-
-  // Get annotation that description is "จำนวน"
-  const [voteAnno] = annotations.filter((anno) =>
-    /^\d+$/.test(anno.description)
-  )
-  if (voteAnno === undefined) return {}
-  return { voteAnno: voteAnno }
+  return {
+    anno: anno,
+    width: page.width,
+    height: page.height,
+  }
 }
 
-const checkNumber = (description, target) => {
-  return description.includes(target)
+/**
+ * Check and get result from Vision API response json that type is normal
+ * @param {String} total
+ * @param {Array} annos
+ */
+const getResultTypeCrop = (total, annos) => {
+  // Condition
+  if (!checkKeywords(conditions.cropped.keywords, total)) return {}
+
+  const [anno] = annos.filter((anno) => conditions.cropped.target.test(anno.description))
+  return { anno }
 }
 
-const checkNumberNName = (description, target) => {
-  return checkNumber(description, target) && description.includes("กุลจิราณัฐ")
-}
+/**
+ * Check keywords
+ * @param {Array} keywords
+ */
+const checkKeywords = (keywords, str) => keywords.every((k) => str.includes(k))

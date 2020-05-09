@@ -3,44 +3,27 @@ import { GCS } from "@app/services"
 import { FileHelper, ImageHelper } from "@app/helpers"
 
 export const imageTextDetection = async () => {
-  const imagePath = storage_path(
-    "tmp/uploads/capture-1588766049022-762403758.jpg"
-  )
+  const imagePath = storage_path("tmp/uploads/capture-1588766049022-762403758.jpg")
 
-  const resultOI = await visionOriginalImage(imagePath)
+  const resultOI = await visionImage(imagePath)
 
   const { outputPath } = await createCroppedImage(imagePath, resultOI)
 
-  const { voteAnno } = await visionCroppedImage(outputPath)
+  const { anno } = await visionImage(outputPath, "crop")
 
-  return { voteAnno }
+  return { anno }
 }
 
 /**
- * Send Original image to VISION API
+ * Send to VISION API and decode response json
  * @param {String} imagePath
  */
-const visionOriginalImage = async (imagePath) => {
+const visionImage = async (imagePath, type) => {
   // Send to VISON API
   const result = await GCS.imageTextDetection(imagePath)
 
   // Get data from VISION response
-  return GCS.parseData(result)
-}
-
-/**
- * Send Cropped image to VISION API
- * @param {String} imagePath
- */
-const visionCroppedImage = async (imagePath) => {
-  // Send to VISON API
-  const result = await GCS.imageTextDetection(imagePath)
-
-  // Remove cropped image
-  FileHelper.remove(imagePath)
-
-  // Get data from VISION response
-  return GCS.parseDataCrop(result)
+  return GCS.decodeTextDetection(result, type)
 }
 
 /**
@@ -48,13 +31,13 @@ const visionCroppedImage = async (imagePath) => {
  * @param {String} imagePath
  * @param {Annotation} numberAnno
  */
-const createCroppedImage = async (imagePath, { numberAnno, width }) => {
+const createCroppedImage = async (imagePath, { anno, width }) => {
   // Validate
-  if (numberAnno === undefined) return {}
+  if (anno === undefined) return {}
 
   // Prepare cropping image
   let outputPath = ImageHelper.getOutputImagePath(imagePath)
-  const size = calculateSizeOutputImage(numberAnno, width)
+  const size = calculateSizeOutputImage(anno, width)
 
   // Cropping image
   const status = await ImageHelper.cropImage(size, imagePath, outputPath)
@@ -68,12 +51,12 @@ const createCroppedImage = async (imagePath, { numberAnno, width }) => {
  * @param {Object} numberAnno
  * @param {Int} width
  */
-const calculateSizeOutputImage = (numberAnno, width) => {
+const calculateSizeOutputImage = (anno, width) => {
   // Get bounding poly x,y specific left-top (1) and left-bottom (3)
   //  1 -------- 2
   //  |   word   |
   //  3 -------- 4
-  const { 0: bfirst, 3: blast } = numberAnno.boundingPoly.vertices
+  const { 0: bfirst, 3: blast } = anno.boundingPoly.vertices
 
   // Cal. height, top of cropped image
   const height = 150 + blast.y - bfirst.y
